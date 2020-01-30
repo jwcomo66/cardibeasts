@@ -16,6 +16,9 @@ import rospy
 import sensor_msgs.msg
 import cv2
 import cv_bridge
+import si
+from single.msg import Num
+from std_msgs.msg import String, Float64
 
 
 #
@@ -57,7 +60,7 @@ class Detector:
                                          queue_size=1)
 
         self.publisher1 = rospy.Publisher("/goal",
-                                         [Float64, Float64],
+                                         String,
                                          queue_size=1)
 
         
@@ -90,7 +93,7 @@ class Detector:
         for (x,y,w,h) in objects:
             cv2.rectangle(cvImage,(x,y),(x+w,y+h),(255,0,0),2)
 
-        self.publisher1.publish([x, y])
+        self.publisher1.publish("{} {}".format(x, y))
 
         # Convert back into a ROS image and republish (for debugging).
         self.publisher.publish(
