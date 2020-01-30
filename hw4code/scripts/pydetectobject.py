@@ -92,8 +92,10 @@ class Detector:
         # Indicate the objects in the image.
         for (x,y,w,h) in objects:
             cv2.rectangle(cvImage,(x,y),(x+w,y+h),(255,0,0),2)
-
-        self.publisher1.publish("{} {}".format(x, y))
+            print(x)
+            print(y)
+            self.publisher1.publish("{} {}".format(x, y))
+        
 
         # Convert back into a ROS image and republish (for debugging).
         self.publisher.publish(
