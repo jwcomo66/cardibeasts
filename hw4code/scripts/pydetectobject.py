@@ -16,7 +16,7 @@ import rospy
 import sensor_msgs.msg
 import cv2
 import cv_bridge
-import si
+#import si
 from single.msg import Num
 from std_msgs.msg import String, Float64
 
