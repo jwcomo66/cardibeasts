@@ -57,7 +57,7 @@ class Detector:
                                          queue_size=1)
 
         self.publisher1 = rospy.Publisher("/goal",
-                                         sensor_msgs.msg.Image,
+                                         [Float64, Float64],
                                          queue_size=1)
 
         
@@ -83,12 +83,14 @@ class Detector:
                                                  flags=cv2.CASCADE_SCALE_IMAGE)
 
         # For the fun of it.  This should also be published!
-        # self.publisher1.publish(objects)
-        print type(objects)
+        
+        print objects
 
         # Indicate the objects in the image.
         for (x,y,w,h) in objects:
             cv2.rectangle(cvImage,(x,y),(x+w,y+h),(255,0,0),2)
+
+        self.publisher1.publish([x, y])
 
         # Convert back into a ROS image and republish (for debugging).
         self.publisher.publish(
