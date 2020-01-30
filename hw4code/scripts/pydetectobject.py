@@ -83,7 +83,7 @@ class Detector:
                                                  flags=cv2.CASCADE_SCALE_IMAGE)
 
         # For the fun of it.  This should also be published!
-        self.publisher1.publish(objects)
+        # self.publisher1.publish(objects)
         print type(objects)
 
         # Indicate the objects in the image.
