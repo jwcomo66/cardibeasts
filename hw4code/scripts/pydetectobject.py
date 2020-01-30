@@ -56,6 +56,12 @@ class Detector:
                                          sensor_msgs.msg.Image,
                                          queue_size=1)
 
+        #self.publisher1 = rospy.Publisher("/goal",
+        #                                 sensor_msgs.msg.Image,
+        #                                 queue_size=1)
+
+        print(sensor_msgs.msg.Image)
+
         # Report.
         rospy.loginfo("Detector configured with:")
         rospy.loginfo("Cascade XML file: " + XMLfile)
