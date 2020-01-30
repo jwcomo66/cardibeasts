@@ -56,11 +56,11 @@ class Detector:
                                          sensor_msgs.msg.Image,
                                          queue_size=1)
 
-        #self.publisher1 = rospy.Publisher("/goal",
-        #                                 sensor_msgs.msg.Image,
-        #                                 queue_size=1)
+        self.publisher1 = rospy.Publisher("/goal",
+                                         sensor_msgs.msg.Image,
+                                         queue_size=1)
 
-        print(sensor_msgs.msg.Image)
+        
 
         # Report.
         rospy.loginfo("Detector configured with:")
@@ -83,7 +83,8 @@ class Detector:
                                                  flags=cv2.CASCADE_SCALE_IMAGE)
 
         # For the fun of it.  This should also be published!
-        print objects
+        self.publisher1.publish(objects)
+        print type(objects)
 
         # Indicate the objects in the image.
         for (x,y,w,h) in objects:
