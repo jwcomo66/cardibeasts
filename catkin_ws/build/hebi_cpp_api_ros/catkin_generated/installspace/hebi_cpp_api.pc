@@ -1,0 +1,8 @@
+prefix=/home/robot/catkin_ws/install
+
+Name: hebi_cpp_api
+Description: Description of hebi_cpp_api
+Version: 3.1.1
+Cflags: -I/home/robot/catkin_ws/install/include -I/usr/include/eigen3
+Libs: -L/home/robot/catkin_ws/install/lib -lhebic++ -lhebi
+Requires: 

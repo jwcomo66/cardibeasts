@@ -1,0 +1,8 @@
+prefix=/home/robot/catkin_ws/install
+
+Name: hebiros_description
+Description: Description of hebiros_description
+Version: 2.0.0
+Cflags: 
+Libs: -L/home/robot/catkin_ws/install/lib 
+Requires: 

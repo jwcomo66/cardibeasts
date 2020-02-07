@@ -1,0 +1,2 @@
+cardibeasts/hw4code:hebi_cpp_api_ros:hebiros/hebiros:hebiros/hebiros_advanced_examples:hebiros/hebiros_basic_examples:hebiros/hebiros_description:hebiros/hebiros_gazebo_plugin:realsense-ros/realsense2_camera:realsense-ros/realsense2_description:single
+-DCATKIN_DEVEL_PREFIX=/home/robot/catkin_ws/devel -DCMAKE_INSTALL_PREFIX=/home/robot/catkin_ws/install -G Unix Makefiles
