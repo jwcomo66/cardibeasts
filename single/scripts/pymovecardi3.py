@@ -91,7 +91,7 @@ if __name__ == "__main__":
     goalpos = [0.0, 0.0, 0.0]
 
     t      = 0.0
-    cmdpos = [msg.position[0], msg.position[1], 0.0]
+    cmdpos = [msg.position[0]-.39, msg.position[1]-.39, 0.0+.44]
     cmdvel = [0.0, 0.0, 0.0]
     cmdtor = [0.0, 0.0, 0.0]
 
