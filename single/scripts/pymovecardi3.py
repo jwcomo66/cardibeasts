@@ -33,6 +33,34 @@ cmdtor = [0.0, 0.0, 0.0]            # Current cmd torque (Nm)
 # hence will always be self-consistent!)
 # access_parameters_mutex = Lock()
 
+l1 = .3
+l2 = .3
+
+def get_q2(l1, l2, x, z):
+    return -1*math.acos((x**2 + z**2 - l1**2 - l2**2)/(2*l1*l2))
+
+def get_q1(l1, l2, x, z):
+    q2 = get_q2(l1, l2, x, z)
+    q1 = math.atan(z/x) - math.atan(l2*math.sin(q2)/(l1 + l2*math.cos(q2)))
+    
+    return q1
+
+def ikin(x, z):
+    if x < 0 or z < 0:
+        return None
+    # Check if outsize of max reach
+    max_reach = l1 + l2
+    if math.sqrt(x**2 + z**2) > max_reach:
+        theta = math.atan(z/x)
+        q1 = math.pi
+        q2 = theta
+        return [q1, q2]
+    
+    q1 = get_q1(l1, l2, x, z)
+    q2 = get_q2(l1, l2, x, z) + math.pi
+    
+    #Now change angles for our robot
+    return [math.pi/2 - q1, -(math.pi - q2)]
 
 #
 #   Goal Subscriber Callback
@@ -50,11 +78,12 @@ def goalCallback(msg):
 
     t1 = -math.atan(y/x)
     
+    [t2, t3] = ikin(x, z)
 
     goalpos[0] = t1	+ zeropos[0]
-    goalpos[1] = zeropos[1]
+    goalpos[1] = t2 + zeropos[1]
     
-    goalpos[2] = zeropos[2]	
+    goalpos[2] = t3 + zeropos[2]	
     # Report.
     #rospy.loginfo("motor 0 (#5) Moving goal to %6.3frad" % goalpos[0])
     #rospy.loginfo("motor 1 (#6) moving to %6.3frad" % goalpos[1])
@@ -104,12 +133,10 @@ if __name__ == "__main__":
 
     # Initialize the parameters and state variables.  Do this before
     # the subscriber is activated (as it may run anytime thereafter).
-    #goalpos = [0.0, 0.0, 0.0]
     goalpos = zeropos[:]
-    print(msg)
     t      = 0.0
-    cmdpos = [msg.position[0],msg.position[1],msg.position[2]]
-    #cmdpos = zeropos[:]
+    #MSG coming with order 156, but we send in order 561
+    cmdpos = [msg.position[1],msg.position[2],msg.position[0]]
     cmdvel = [0.0, 0.0, 0.0]
     cmdtor = [0.0, 0.0, 0.0]
 
