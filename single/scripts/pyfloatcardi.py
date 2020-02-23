@@ -22,7 +22,7 @@ from threading import Lock
 #   see the state and pass information to the main (timer) loop.
 #
 goalpos = [0.0, 0.0, 0.0, 0.0, 0.0]		    # Goal position
-zeropos = [-0.38, -0.37, 0.44, 0.39, -1.25]
+zeropos = [-0.38, -0.37, 0.44, 0.39, -1.4]
                                                 
 t      = 0.0                        # Current time (sec)
 cmdpos = [0.0, 0.0, 0.0, 0.0, 0.0]            # Current cmd position (rad)
@@ -80,26 +80,17 @@ def goalCallback(msg):
     x = msg.x
     y = msg.y
     z = msg.z
-    #print(x)
-    #print(y)
-    #print(z)
-    if x == -1.0 and y == -1.0 and z == -1.0:
-        #### Gripper mechanic close
-        goalpos[4] = zeropos[4] -.45
-    elif x == -2.0 and y == -2.0 and z == -2.0:
-        #### Gripper mechanic open
-        goalpos[4] = zeropos[4]
-    else: 
-        t1 = -math.atan(y/x)
-        
-        [t2, t3, t4] = ikin(x, z)
 
-        goalpos[0] = t1	+ zeropos[0]
-        goalpos[1] = t2 + zeropos[1]
-        
-        goalpos[2] = t3 + zeropos[2]
-        goalpos[3] = t4 + zeropos[3]
-        goalpos[4] = goalpos[4]
+    t1 = -math.atan(y/x)
+    
+    [t2, t3, t4] = ikin(x, z)
+
+    goalpos[0] = t1	+ zeropos[0]
+    goalpos[1] = t2 + zeropos[1]
+    
+    goalpos[2] = t3 + zeropos[2]
+    goalpos[3] = t4 + zeropos[3]
+    goalpos[4] = 0 + zeropos[4]
     # Report.
     #rospy.loginfo("motor 0 (#5) Moving goal to %6.3frad" % goalpos[0])
     #rospy.loginfo("motor 1 (#6) moving to %6.3frad" % goalpos[1])
@@ -168,7 +159,7 @@ if __name__ == "__main__":
 
     # Now that the variables are valid, create/enable the subscriber
     # that (at any time hereafter) may read/update the settings.
-    rospy.Subscriber("goal", Num, goalCallback)
+    #rospy.Subscriber("goal", Num, goalCallback)
     #rospy.Subscriber("/detector/faces", FaceArrayStamped, goalCallback)
 
     # Create and run a servo loop at 100Hz until shutdown.
@@ -180,7 +171,7 @@ if __name__ == "__main__":
     starttime = rospy.Time.now()	
     while not rospy.is_shutdown():
 	msg = rospy.wait_for_message('/hebiros/robot/feedback/joint_state', JointState);
-	currpos = [msg.position[3],msg.position[4],msg.position[0],msg.position[2], msg.position[1]]
+	goalpos = [msg.position[3],msg.position[4],msg.position[0],msg.position[2], msg.position[1]]
         
         # Current time (since start)
         servotime = rospy.Time.now()
@@ -207,13 +198,13 @@ if __name__ == "__main__":
     	    cmdpos[i] = cmdpos[i] + dt * cmdvel[i]
 
         #cmdtor = [0.0, 0.0, 0.0, 0.0]
-        theta3 = currpos[3]-zeropos[3];
-        theta1 = currpos[1]-zeropos[1];
-        theta2 = currpos[2] - zeropos[2];
-        #print(theta3)
+        theta3 = goalpos[3] - zeropos[3];
+        theta1 = goalpos[1] - zeropos[1];
+        theta2 = goalpos[2] - zeropos[2];
+        print(theta3)
         
-        t2 = -2.4*math.sin(math.pi-(theta2 - theta1))
-        t1 = -6*math.sin(theta1) - t2
+        t2 = -2.2*math.sin(math.pi-(theta2 - theta1)) + .35
+        t1 = -6.25*math.sin(theta1) - t2 #-6*math.sin(theta1) - t2
         cmdtor = [0.3, t1, t2, 0.0,0.0]
 
         # Build and send (publish) the command message.

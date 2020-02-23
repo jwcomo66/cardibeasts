@@ -22,7 +22,7 @@ from threading import Lock
 #   see the state and pass information to the main (timer) loop.
 #
 goalpos = [0.0, 0.0, 0.0, 0.0, 0.0]		    # Goal position
-zeropos = [-0.38, -0.37, 0.44, 0.39, -1.25]
+zeropos = [-0.38, -0.37, 0.44, 0.39, -1.4]
                                                 
 t      = 0.0                        # Current time (sec)
 cmdpos = [0.0, 0.0, 0.0, 0.0, 0.0]            # Current cmd position (rad)
@@ -75,36 +75,43 @@ def ikin(x, z):
 #
 def goalCallback(msg):
     # Simply save the new goal position.
-    global goalpos
-    
+    global goalpostheta # goal position based on ikin of the cartesian goal positon
+    global goalposcart # cartesian goal position
     x = msg.x
     y = msg.y
-    z = msg.z
-    #print(x)
-    #print(y)
-    #print(z)
-    if x == -1.0 and y == -1.0 and z == -1.0:
-        #### Gripper mechanic close
-        goalpos[4] = zeropos[4] -.45
-    elif x == -2.0 and y == -2.0 and z == -2.0:
-        #### Gripper mechanic open
-        goalpos[4] = zeropos[4]
-    else: 
-        t1 = -math.atan(y/x)
-        
-        [t2, t3, t4] = ikin(x, z)
+    z = msg.z # set the goal to be directly above the real goal
+    
+    goalposcart = [x, y, z + .1] # set the cartesian goal to 10 cm above the goal that we recieve
+    goalpostheta = carttotheta(goalposcart)
 
-        goalpos[0] = t1	+ zeropos[0]
-        goalpos[1] = t2 + zeropos[1]
-        
-        goalpos[2] = t3 + zeropos[2]
-        goalpos[3] = t4 + zeropos[3]
-        goalpos[4] = goalpos[4]
     # Report.
     #rospy.loginfo("motor 0 (#5) Moving goal to %6.3frad" % goalpos[0])
     #rospy.loginfo("motor 1 (#6) moving to %6.3frad" % goalpos[1])
     #rospy.loginfo("motor 2 (#1) moving to %6.3frad" % goalpos[2])
+def carttotheta(cart):
+    ''' 
+    Given a cartesian goal, returns the array for a thetagoal 
+    based on our inverse kinematics
+    '''
+    goalpos = [0, 0, 0, 0, 0]
+    x = cart[0]
+    y = cart[1]
+    z = cart[2]
 
+    t1 = -math.atan(y/x)
+    
+    [t2, t3, t4] = ikin(x, z)
+
+    goalpos[0] = t1	+ zeropos[0]
+    goalpos[1] = t2 + zeropos[1]
+    
+    goalpos[2] = t3 + zeropos[2]
+    goalpos[3] = t4 + zeropos[3]
+    goalpos[4] = 0 + zeropos[4]
+
+    return(goalpos)
+    
+    
 
 #
 #   Main Code
@@ -210,7 +217,7 @@ if __name__ == "__main__":
         theta3 = currpos[3]-zeropos[3];
         theta1 = currpos[1]-zeropos[1];
         theta2 = currpos[2] - zeropos[2];
-        #print(theta3)
+        print(theta3)
         
         t2 = -2.4*math.sin(math.pi-(theta2 - theta1))
         t1 = -6*math.sin(theta1) - t2

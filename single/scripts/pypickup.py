@@ -9,6 +9,7 @@ import sys
 import rospy
 import math
 import rosbag
+import numpy as np
 
 from sensor_msgs.msg import JointState
 from std_msgs.msg    import Float64, String
@@ -22,7 +23,7 @@ from threading import Lock
 #   see the state and pass information to the main (timer) loop.
 #
 goalpos = [0.0, 0.0, 0.0, 0.0, 0.0]		    # Goal position
-zeropos = [-0.38, -0.37, 0.44, 0.39, -1.25]
+zeropos = [-0.38, -0.37, 0.44, 0.39, -1.4]
                                                 
 t      = 0.0                        # Current time (sec)
 cmdpos = [0.0, 0.0, 0.0, 0.0, 0.0]            # Current cmd position (rad)
@@ -75,36 +76,42 @@ def ikin(x, z):
 #
 def goalCallback(msg):
     # Simply save the new goal position.
-    global goalpos
-    
+    global goalpos # goal position based on ikin of the cartesian goal positon
+    global goalposcart # cartesian goal position
     x = msg.x
     y = msg.y
-    z = msg.z
-    #print(x)
-    #print(y)
-    #print(z)
-    if x == -1.0 and y == -1.0 and z == -1.0:
-        #### Gripper mechanic close
-        goalpos[4] = zeropos[4] -.45
-    elif x == -2.0 and y == -2.0 and z == -2.0:
-        #### Gripper mechanic open
-        goalpos[4] = zeropos[4]
-    else: 
-        t1 = -math.atan(y/x)
-        
-        [t2, t3, t4] = ikin(x, z)
+    z = msg.z # set the goal to be directly above the real goal
+    
+    goalposcart = [x, y, z] # set the cartesian goal to 10 cm above the goal that we recieve
+    goalpos= carttotheta(goalposcart)
 
-        goalpos[0] = t1	+ zeropos[0]
-        goalpos[1] = t2 + zeropos[1]
-        
-        goalpos[2] = t3 + zeropos[2]
-        goalpos[3] = t4 + zeropos[3]
-        goalpos[4] = goalpos[4]
     # Report.
     #rospy.loginfo("motor 0 (#5) Moving goal to %6.3frad" % goalpos[0])
     #rospy.loginfo("motor 1 (#6) moving to %6.3frad" % goalpos[1])
     #rospy.loginfo("motor 2 (#1) moving to %6.3frad" % goalpos[2])
+def carttotheta(cart):
+    ''' 
+    Given a cartesian goal, returns the array for a thetagoal 
+    based on our inverse kinematics
+    '''
+    goalpos1 = [0, 0, 0, 0, 0]
+    x = cart[0]
+    y = cart[1]
+    z = cart[2]
 
+    t1 = -math.atan(y/x)
+    
+    [t2, t3, t4] = ikin(x, z)
+
+    goalpos1[0] = t1	+ zeropos[0]
+    goalpos1[1] = t2 + zeropos[1]
+    
+    goalpos1[2] = t3 + zeropos[2]
+    goalpos1[3] = t4 + zeropos[3]
+    goalpos1[4] = 0 + zeropos[4]
+    return(goalpos1)
+    
+    
 
 #
 #   Main Code
@@ -178,10 +185,12 @@ if __name__ == "__main__":
     #f = open('lol.txt', 'w')
 
     starttime = rospy.Time.now()	
+    clap = 0 # Clap is whether or not we grab
     while not rospy.is_shutdown():
 	msg = rospy.wait_for_message('/hebiros/robot/feedback/joint_state', JointState);
 	currpos = [msg.position[3],msg.position[4],msg.position[0],msg.position[2], msg.position[1]]
         
+
         # Current time (since start)
         servotime = rospy.Time.now()
         t = (servotime - starttime).to_sec()
@@ -214,8 +223,16 @@ if __name__ == "__main__":
         
         t2 = -2.4*math.sin(math.pi-(theta2 - theta1))
         t1 = -6*math.sin(theta1) - t2
-        cmdtor = [0.3, t1, t2, 0.0,0.0]
-
+        cmdtor = [0.3, t1, t2, 0.0,clap]
+        
+        #print(np.linalg.norm(np.array(cmdpos) - (currpos)))
+        totalspeed = 0        
+        for i in range(5):
+            totalspeed += cmdvel[i]
+        print(totalspeed)
+        if(abs(totalspeed) < .01):
+            clap = -3
+           
         # Build and send (publish) the command message.
         command_msg.header.stamp = servotime
         command_msg.position  = cmdpos

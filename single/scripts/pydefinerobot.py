@@ -27,7 +27,7 @@ if __name__ == "__main__":
     # Call the service.
     rospy.loginfo("Calling /hebiros/add_group_from_names...")
     try:
-        resp = proxy(group_name='robot', names={'5','6','1'}, families={'Photon'})
+        resp = proxy(group_name='robot', names={'5','6','1','2', '3'}, families={'Photon'})
         rospy.loginfo("'robot' created")
     except rospy.ServiceException, e:
         rospy.logerr("Service call failed: %s"%e)
