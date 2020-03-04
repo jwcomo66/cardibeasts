@@ -28,44 +28,12 @@ t      = 0.0                        # Current time (sec)
 cmdpos = [0.0, 0.0, 0.0, 0.0, 0.0]            # Current cmd position (rad)
 cmdvel = [0.0, 0.0, 0.0, 0.0, 0.0]            # Current cmd velocity (rad
 cmdtor = [0.0, 0.0, 0.0, 0.0, 0.0]            # Current cmd torque (Nm)
+currpos = goalpos[:]
+currtorque = goalpos[:]
 
 # We don't need a mutex here, as there is a single parameter (which
 # hence will always be self-consistent!)
 # access_parameters_mutex = Lock()
-
-l1 = .4
-l2 = .3
-
-def get_q2(l1, l2, x, z):
-    return -1*math.acos((x**2 + z**2 - l1**2 - l2**2)/(2*l1*l2))
-
-def get_q1(l1, l2, x, z):
-    q2 = get_q2(l1, l2, x, z)
-    q1 = math.atan(z/x) - math.atan(l2*math.sin(q2)/(l1 + l2*math.cos(q2)))
-    
-    return q1
-
-def ikin(x, z):
-    if x < 0 or z < 0:
-        return [0.0, 0.0]
-    # Check if outsize of max reach
-    max_reach = l1 + l2
-    if math.sqrt(x**2 + z**2) > max_reach:
-        theta = math.atan(z/x)
-        q1 = math.pi
-        q2 = theta
-        return [q1, q2, 0.0]
-    #angles from desmos sim
-    q1 = get_q1(l1, l2, x, z)
-    q2 = get_q2(l1, l2, x, z) + math.pi
-
-    #have angles from verticle (our frame)
-    q1 = math.pi/2 - q1
-    q2 = math.pi - q2
-    q3 = (q1 + q2) - math.pi/2
-    
-    #Now change angles for our robot
-    return [q1, -q2, -q3]
 
 #
 #   Goal Subscriber Callback
@@ -77,24 +45,10 @@ def goalCallback(msg):
     # Simply save the new goal position.
     global goalpos
     
-    x = msg.x
-    y = msg.y
-    z = msg.z
+    goalpos = [msg.position[3],msg.position[4],msg.position[0],msg.position[2], msg.position[1]]
+    #currpos = goalpos[:]
+    currtorque = [msg.effort[3],msg.effort[4],msg.effort[0],msg.effort[2], msg.effort[1]]
 
-    t1 = -math.atan(y/x)
-    
-    [t2, t3, t4] = ikin(x, z)
-
-    goalpos[0] = t1	+ zeropos[0]
-    goalpos[1] = t2 + zeropos[1]
-    
-    goalpos[2] = t3 + zeropos[2]
-    goalpos[3] = t4 + zeropos[3]
-    goalpos[4] = 0 + zeropos[4]
-    # Report.
-    #rospy.loginfo("motor 0 (#5) Moving goal to %6.3frad" % goalpos[0])
-    #rospy.loginfo("motor 1 (#6) moving to %6.3frad" % goalpos[1])
-    #rospy.loginfo("motor 2 (#1) moving to %6.3frad" % goalpos[2])
 
 
 #
@@ -117,10 +71,7 @@ if __name__ == "__main__":
     command_msg.name.append('Photon/2')
     command_msg.name.append('Photon/3')
 
-   
-    #command_msg.position.append(0.0)
-    #command_msg.position.append(0.0)
-    #command_msg.position.append(0.0)
+  
     command_msg.position.append(zeropos[0])
     command_msg.position.append(zeropos[1])
     command_msg.position.append(zeropos[2])
@@ -160,7 +111,7 @@ if __name__ == "__main__":
     # Now that the variables are valid, create/enable the subscriber
     # that (at any time hereafter) may read/update the settings.
     #rospy.Subscriber("goal", Num, goalCallback)
-    #rospy.Subscriber("/detector/faces", FaceArrayStamped, goalCallback)
+    rospy.Subscriber('/hebiros/robot/feedback/joint_state', JointState, goalCallback)
 
     # Create and run a servo loop at 100Hz until shutdown.
     servo = rospy.Rate(50)
@@ -171,7 +122,7 @@ if __name__ == "__main__":
     starttime = rospy.Time.now()	
     while not rospy.is_shutdown():
 	msg = rospy.wait_for_message('/hebiros/robot/feedback/joint_state', JointState);
-	goalpos = [msg.position[3],msg.position[4],msg.position[0],msg.position[2], msg.position[1]]
+	currpos = [msg.position[3],msg.position[4],msg.position[0],msg.position[2], msg.position[1]]
         
         # Current time (since start)
         servotime = rospy.Time.now()
@@ -198,14 +149,15 @@ if __name__ == "__main__":
     	    cmdpos[i] = cmdpos[i] + dt * cmdvel[i]
 
         #cmdtor = [0.0, 0.0, 0.0, 0.0]
-        theta3 = goalpos[3] - zeropos[3];
-        theta1 = goalpos[1] - zeropos[1];
-        theta2 = goalpos[2] - zeropos[2];
-        print(theta3)
+        theta3 = currpos[3] - zeropos[3];
+        theta1 = currpos[1] - zeropos[1];
+        theta2 = currpos[2] - zeropos[2];
+        print(theta2)
         
-        t2 = -2.2*math.sin(math.pi-(theta2 - theta1)) + .35
-        t1 = -6.25*math.sin(theta1) - t2 #-6*math.sin(theta1) - t2
+        t2 = -2.3*math.sin(math.pi-(theta2 - theta1)) + .2
+        t1 = -6.25*math.sin(theta1) - t2 
         cmdtor = [0.3, t1, t2, 0.0,0.0]
+        #cmdtor = currtorque[:]
 
         # Build and send (publish) the command message.
         command_msg.header.stamp = servotime
