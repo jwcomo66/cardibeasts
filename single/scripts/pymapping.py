@@ -17,7 +17,7 @@ from std_msgs.msg    import Float64, String
 from opencv_apps.msg import FaceArrayStamped
 from single.msg import Num
 from threading import Lock
-
+import pickle
 import os
 
 M = None
@@ -51,6 +51,12 @@ def apply(uv):
 if __name__ == "__main__":
     #rospy.init_node('pymapping')
     calibrate()
+
+    #Dump M object 
+    pickle_out = open("mapping_arr.pickle","wb")
+    pickle.dump(M, pickle_out)
+    pickle_out.close()
+
     apply(np.array([1573., 894.]))
 
    
