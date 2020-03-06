@@ -20,13 +20,15 @@ from threading import Lock
 
 import os
 
-M = None
+M = np.array([[ 7.56393057e-06,  5.87162978e-04,  5.88591924e-02],
+ [-5.83458168e-04, -4.16271360e-06,  5.53008796e-01],
+ [ 2.81921638e-05,  2.02543931e-07,  1.00000000e+00]])
 
 def calibrate():
     global M
     # Set (or get from some input) the matching pixel and
     # coordinates.  4 points work.
-    coords = detect.get_corners(True, 100) # Get the coordinates of the points using dtectmarkers.py
+    coords = detect.get_corners(True, 1000) # Get the coordinates of the points using dtectmarkers.py
                                            # Dear Rohan, idk if this is where this goes, it takes 
                                            # ~5 seconds every time to run this callibration
     uvlist = coords[0][0].astype(float)
@@ -50,8 +52,8 @@ def apply(uv):
 
 if __name__ == "__main__":
     #rospy.init_node('pymapping')
-    calibrate()
-    apply(np.array([1573., 894.]))
+    #calibrate()
+    apply(np.array([829., 799.]))
 
    
 

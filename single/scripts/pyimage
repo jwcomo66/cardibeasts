@@ -131,7 +131,7 @@ def crop(im):
     xmax = np.max(x)
     ymin = np.min(y)
     ymax = np.max(y)
-    off = 20
+    off = 10
     
     focused_im = im[xmin-off:xmax+off, ymin-off:ymax+off]
     

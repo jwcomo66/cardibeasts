@@ -84,7 +84,7 @@ def get_corners(showVid, nframes):
 
     avg_corners = avg_corners / realN
     avg_corners = avg_corners.astype(int)
-    return(avg_corners.reshape(1,16,2), real_corners.reshape(1,16,2))
+    return(avg_corners.reshape(1,16,2), real_corners.reshape(1,16,2) / 100)
 
 
 if __name__ == "__main__":

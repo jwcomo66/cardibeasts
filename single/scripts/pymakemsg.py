@@ -46,16 +46,15 @@ if __name__ == "__main__":
     #print("sending secod message")
     #pub.publish(.2, 0, .3)
     #time.sleep(6)
+    B4 = '''
+    pub.publish(.347, -.219, .25)
     
-
-    
-
     print("sending second message")
-    pub.publish(-.333, .188, .25)
+    pub.publish(.347, -.219, .25)
     time.sleep(4)
 
     print("sending third message")
-    pub.publish(-.333, .188, .15)
+    pub.publish(.347, -.219, .15)
     time.sleep(4)
 
     print("sending 4th message")
@@ -63,14 +62,35 @@ if __name__ == "__main__":
     time.sleep(4)
     
     print("sending 5th message")
-    pub.publish(-.333, .188, .25)
+    pub.publish(.347, -.219, .25)
     time.sleep(4)
     
-    #print("sending 6th message")
-    #pub.publish(-2, -2, -2)
+    print("sending 6th message")
+    pub.publish(-2, -2, -2)
+    time.sleep(4)
+
+    '''
+    
+    #G7
+    print("sending second message")
+    pub.publish(.52, .064, .25)
+    time.sleep(4)
+
+    print("sending third message")
+    pub.publish(.52, .064, .15)
+    time.sleep(4)
+
+    print("sending 4th message")
+    pub.publish(-1, -1, -1)
+    time.sleep(4)
+    
+    print("sending 5th message")
+    pub.publish(.52, .064, .25)
+    time.sleep(4)
+    
+    print("sending 6th message")
+    pub.publish(-2, -2, -2)
     #time.sleep(4)
-    
-    
     
     #print("sending eith message")
     #pub.publish(.14, .24, .15)
