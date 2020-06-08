@@ -15,7 +15,7 @@ from std_msgs.msg    import Float64, String
 from opencv_apps.msg import FaceArrayStamped
 from single.msg import Num
 from threading import Lock
-
+import numpy as np
 
 #
 #   Global Variables.  We use global variables so the callbacks can
@@ -41,7 +41,7 @@ def get_q2(l1, l2, x, z):
 
 def get_q1(l1, l2, x, z):
     q2 = get_q2(l1, l2, x, z)
-    q1 = math.atan(z/x) - math.atan(l2*math.sin(q2)/(l1 + l2*math.cos(q2)))
+    q1 = math.atan2(z,x) - math.atan2(l2*math.sin(q2),(l1 + l2*math.cos(q2)))
     
     return q1
 
@@ -52,8 +52,8 @@ def ikin(x, z):
     max_reach = l1 + l2
     if math.sqrt(x**2 + z**2) > max_reach:
         theta = math.atan(z/x)
-        q1 = math.pi
-        q2 = theta
+        q2 = 0#math.pi
+        q1 = theta
         return [q1, q2, 0.0]
     #angles from desmos sim
     q1 = get_q1(l1, l2, x, z)
@@ -66,6 +66,29 @@ def ikin(x, z):
     
     #Now change angles for our robot
     return [q1, -q2, -q3]
+
+def ikin2(x, z):
+    if x < 0 or z < 0:
+        return [0.0, 0.0]
+    # Check if outsize of max reach
+    max_reach = l1 + l2
+    if math.sqrt(x**2 + z**2) > max_reach:
+        theta = math.atan2(z,x)
+        q2 = 0#math.pi
+        q1 = theta
+        return [q1, q2, 0.0]
+    #angles from desmos sim
+    q1 = get_q1(l1, l2, x, z)
+    q2 = get_q2(l1, l2, x, z) + math.pi
+
+    #have angles from verticle (our frame)
+    q1 = math.pi/2 - q1
+    q2 = math.pi - q2
+    q3 = (q1 + q2) - math.pi/2
+    
+    #Now change angles for our robot
+    return [q1, -q2, -q3]
+
 
 #
 #   Goal Subscriber Callback
@@ -80,19 +103,37 @@ def goalCallback(msg):
     x = msg.x
     y = msg.y
     z = msg.z
-    #print(x)
-    #print(y)
-    #print(z)
+    
+    if z < .05:
+        return
+    arr = np.array([x,y,z])
+    if np.linalg.norm(arr) > .699:
+        
+        arr = .699*(arr/np.linalg.norm(arr))
+        x = arr[0]
+        y = arr[1]
+        z = arr[2]
+    
+    print(x, y, z, 'peenis')
+
+    if x == 0 and y == 0 and z == 0:
+        goalpos = zeropos[:]
+    
     if x == -1.0 and y == -1.0 and z == -1.0:
         #### Gripper mechanic close
         goalpos[4] = zeropos[4] -.45
     elif x == -2.0 and y == -2.0 and z == -2.0:
         #### Gripper mechanic open
         goalpos[4] = zeropos[4]
-    else: 
-        t1 = -math.atan(y/x)
-        
-        [t2, t3, t4] = ikin(x, z)
+    else:
+        # base angle
+        t1 = -math.atan2(y,x)
+        # change x distance to account for rotation angle
+        print(math.fabs(t1))
+        print(x)
+        x = x/math.cos(math.fabs(t1))   
+        print(x)
+        [t2, t3, t4] = ikin2(x, z)
 
         goalpos[0] = t1	+ zeropos[0]
         goalpos[1] = t2 + zeropos[1]
@@ -100,6 +141,7 @@ def goalCallback(msg):
         goalpos[2] = t3 + zeropos[2]
         goalpos[3] = t4 + zeropos[3]
         goalpos[4] = goalpos[4]
+        print(goalpos)
     # Report.
     #rospy.loginfo("motor 0 (#5) Moving goal to %6.3frad" % goalpos[0])
     #rospy.loginfo("motor 1 (#6) moving to %6.3frad" % goalpos[1])
@@ -185,14 +227,12 @@ if __name__ == "__main__":
         # Current time (since start)
         servotime = rospy.Time.now()
         t = (servotime - starttime).to_sec()
-        # DUMB ADDITION BY CHAD
-        #goalpos[1] = 1.51
         #f.write("{} {} {}\n".format(t, msg.position[0], msg.position[1]))
 
         # Adjust the commands, effectively filtering the goal position
         # into the command position.  Note we only use a single
         # parameter (goalpos) which we read just once, so there is no
-        # chance of self-inconsistency.  I.e. we don't need to mutex!
+        # chance of self-inconsistency. 
         #TIMECONSTANT = 0.7	         	# Convergence time constant
         TIMECONSTANT = .7 ## CHAD ADDITION
         LAMBDA       = 2.0/TIMECONSTANT # Convergence rate
@@ -207,20 +247,21 @@ if __name__ == "__main__":
     	    cmdpos[i] = cmdpos[i] + dt * cmdvel[i]
 
         #cmdtor = [0.0, 0.0, 0.0, 0.0]
-        theta3 = currpos[3]-zeropos[3];
-        theta1 = currpos[1]-zeropos[1];
+        theta3 = currpos[3] - zeropos[3];
+        theta1 = currpos[1] - zeropos[1];
         theta2 = currpos[2] - zeropos[2];
         #print(theta3)
         
         t2 = -2.4*math.sin(math.pi-(theta2 - theta1))
         t1 = -6*math.sin(theta1) - t2
-        cmdtor = [0.3, t1, t2, 0.0,0.0]
+        cmdtor = [0, t1, t2, 0.0,0.0]
 
         # Build and send (publish) the command message.
         command_msg.header.stamp = servotime
         command_msg.position  = cmdpos
         command_msg.velocity  = cmdvel
         command_msg.effort    = cmdtor
+        #print(command_msg.position)
         pub.publish(command_msg)
 
         # Wait for the next turn.

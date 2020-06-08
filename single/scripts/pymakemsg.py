@@ -2,8 +2,6 @@
 #
 #   pypickup.py
 #
-#   Continually (at 100Hz!) send commands to the robot, providing
-#   implicit moves to goal locations - using a filter.
 #
 import sys
 import rospy
@@ -25,41 +23,81 @@ if __name__ == "__main__":
     # for the subscriber to connect so we don't loose initial
     # messages.  Also initialize space for the message data.
     pub = rospy.Publisher('/goal', Num, queue_size=5)
+    
+    #pub.publish(.7, .00, .1)
+    #time.sleep(3)
+    #pub.publish(.7, .00, .1)
+    #time.sleep(3)
+
+
     print("sending real first message")
-    pub.publish(.3, .2, .4)
+    pub.publish(.2125,0, .3)
     time.sleep(1) 
+    
+    print("sending  first message")
+    #pub.publish(.2125,0, .15)
+    #time.sleep(3) 
 
     print("sending first message")
-    pub.publish(.3, .2, .4)
-    time.sleep(6)
+    #pub.publish(.2125 + .3048, 0, .15)
+    #time.sleep(5)
     
     
-    print("sending secod message")
-    pub.publish(.3, .2, .15)
-    time.sleep(8)
+    #print("sending secod message")
+    #pub.publish(.2, 0, .3)
+    #time.sleep(6)
+    B4 = '''
+    pub.publish(.347, -.219, .25)
     
+    print("sending second message")
+    pub.publish(.347, -.219, .25)
+    time.sleep(4)
+
     print("sending third message")
-    pub.publish(-1.0, -1.0, -1.0)
-    time.sleep(4.5)
-    
-    print("sending fourth message")
-    pub.publish(.3, .2, .28)
-    time.sleep(3.5)
+    pub.publish(.347, -.219, .15)
+    time.sleep(4)
 
-    print("sending fifth message")
-    pub.publish(.28, .1, .15)
-    time.sleep(4.5)
+    print("sending 4th message")
+    pub.publish(-1, -1, -1)
+    time.sleep(4)
     
-    print("sending sixth message")
-    pub.publish(-2.0, -2.0, -2.0)
-    time.sleep(3.5)
+    print("sending 5th message")
+    pub.publish(.347, -.219, .25)
+    time.sleep(4)
     
-    print("sending seventh message")
-    pub.publish(.3, 0.3, 0.4)
-    time.sleep(3)
-    
+    print("sending 6th message")
+    pub.publish(-2, -2, -2)
+    time.sleep(4)
 
-    a = '''
+    '''
+    
+    #G7
+    print("sending second message")
+    pub.publish(.52, .064, .25)
+    time.sleep(4)
+
+    print("sending third message")
+    pub.publish(.52, .064, .15)
+    time.sleep(4)
+
+    print("sending 4th message")
+    pub.publish(-1, -1, -1)
+    time.sleep(4)
+    
+    print("sending 5th message")
+    pub.publish(.52, .064, .25)
+    time.sleep(4)
+    
+    print("sending 6th message")
+    pub.publish(-2, -2, -2)
+    #time.sleep(4)
+    
+    #print("sending eith message")
+    #pub.publish(.14, .24, .15)
+    #time.sleep(4)'''
+
+    b = '''
+
 
     os.system('pwd')
     os.system('rostopic pub /goal single/Num "x: 0.3 \ny: 0.2 \nz: 0.4"')
